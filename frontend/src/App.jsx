@@ -54,7 +54,7 @@ function App() {
     <div className="container">
       <header>
         <h1>AI Text Classifier</h1>
-        <p>Powered by Hugging Face Transformers (Zero-Shot)</p>
+        <p>Powered by SetFit (Few-Shot Learning)</p>
       </header>
 
       <main>

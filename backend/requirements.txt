@@ -4,3 +4,9 @@ transformers
 torch
 pydantic
 python-multipart
+scikit-learn
+pandas
+numpy
+setfit
+sentence-transformers
+datasets

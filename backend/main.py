@@ -1,15 +1,16 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from transformers import pipeline
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
+from setfit import SetFitModel
+import numpy as np
 
 # Initialize the FastAPI app
 app = FastAPI(
     title="AI Text Classifier API",
-    description="A simple API for text classification using Hugging Face Transformers.",
-    version="1.0.0"
+    description="A simple API for text classification using SetFit (Few-Shot Learning).",
+    version="2.0.0"
 )
 
 # Configure CORS to allow requests from the React frontend
@@ -21,22 +22,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize the classification pipeline
-# We use 'facebook/bart-large-mnli' for zero-shot classification
-# This allows us to classify text into any categories we define without specific training
-try:
-    classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
-    print("Model loaded successfully.")
-except Exception as e:
-    print(f"Error loading model: {e}")
-    classifier = None
+# Initialize the classification model
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "setfit-model")
+setfit_model = None
+label_list: list[str] = []
+
+def load_model():
+    global setfit_model, label_list
+    if setfit_model is not None:
+        return
+
+    if not os.path.isdir(MODEL_PATH):
+        print(f"SetFit model not found at {MODEL_PATH}. Please run `python train_setfit.py` first.")
+        return
+
+    try:
+        print(f"Loading SetFit model from {MODEL_PATH}...")
+        model = SetFitModel.from_pretrained(MODEL_PATH)
+        # SetFitModel.labels contains the list of labels used during training
+        setfit_model = model
+        label_list = list(model.labels)
+        print(f"Model loaded successfully with labels: {label_list}")
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        setfit_model = None
 
 class TextRequest(BaseModel):
     text: str
-    candidate_labels: list[str] = [
-        "sports", "politics", "technology", "entertainment", "business", "health",
-        "law", "science", "education", "environment", "finance", "travel", "food"
-    ]
+    # candidate_labels is no longer needed for SetFit as labels are fixed in the model,
+    # but we keep it optional for backward compatibility if needed, though ignored.
+    candidate_labels: list[str] = []
 
 class ClassificationResponse(BaseModel):
     labels: list[str]
@@ -44,28 +59,45 @@ class ClassificationResponse(BaseModel):
     top_label: str
     top_score: float
 
+@app.on_event("startup")
+def startup_event():
+    load_model()
+
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the AI Text Classifier API"}
+    return {"message": "Welcome to the AI Text Classifier API (SetFit Version)"}
 
 @app.post("/classify", response_model=ClassificationResponse)
 def classify_text(request: TextRequest):
-    if not classifier:
-        raise HTTPException(status_code=503, detail="Model not loaded available")
+    if setfit_model is None:
+        # Try loading again if it failed initially or wasn't ready
+        load_model()
+        if setfit_model is None:
+             raise HTTPException(status_code=503, detail="Model not loaded. Please run backend/train_setfit.py to train the model first.")
     
     if not request.text.strip():
         raise HTTPException(status_code=400, detail="Text cannot be empty")
 
     try:
-        # The pipeline returns a dict: 
-        # {'sequence': '...', 'labels': ['label1', 'label2'], 'scores': [0.9, 0.1]}
-        result = classifier(request.text, request.candidate_labels)
+        # SetFit predict_proba returns probabilities for each class
+        # Input must be a list of strings
+        probs = setfit_model.predict_proba([request.text])[0]
+        
+        # Convert numpy array to list
+        probs = probs.tolist() if not isinstance(probs, list) else probs
+        scores = [float(p) for p in probs]
+        labels = label_list
+
+        # Sort by score descending
+        sorted_indices = np.argsort(scores)[::-1]
+        sorted_labels = [labels[i] for i in sorted_indices]
+        sorted_scores = [scores[i] for i in sorted_indices]
         
         return ClassificationResponse(
-            labels=result['labels'],
-            scores=result['scores'],
-            top_label=result['labels'][0],
-            top_score=result['scores'][0]
+            labels=sorted_labels,
+            scores=sorted_scores,
+            top_label=sorted_labels[0],
+            top_score=sorted_scores[0]
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
