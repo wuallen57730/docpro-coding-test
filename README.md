@@ -1,17 +1,17 @@
 # AI Text Classifier
 
-This project is a simple AI-powered text analysis system that performs **Topic Classification**. It uses a React frontend and a Python (FastAPI) backend with Hugging Face Transformers.
+This coding test is a simple AI-powered text analysis system that performs **Topic Classification**. It uses a React frontend and a Python (FastAPI) backend with Hugging Face Transformers.
 
 ## Features
 
-- **Topic Classification**: Categorizes text into predefined topics (Sports, Politics, Technology, Entertainment, Business, Health, Law, Science, Education, Environment, Finance, Travel, Food) using Zero-Shot Classification.
+- **Topic Classification**: Categorizes text into predefined topics (Sports, Politics, Technology, Entertainment, Business, Health, Law, Science, Education, Environment, Finance, Travel, Food) using **Few-Shot Classification (SetFit)**.
 - **Simple Interface**: Clean and responsive UI built with React.
 - **API**: RESTful API endpoint for classification.
 
 ## Tech Stack
 
 - **Frontend**: React, Vite, Axios, CSS
-- **Backend**: Python, FastAPI, Uvicorn, Hugging Face Transformers, PyTorch
+- **Backend**: Python, FastAPI, Uvicorn, SetFit, Sentence Transformers, PyTorch
 
 ## Setup Instructions
 
@@ -40,12 +40,20 @@ This project is a simple AI-powered text analysis system that performs **Topic C
    pip install -r requirements.txt
    ```
 
-4. Run the server:
+4. Train the model (Required for first run):
+
+   ```bash
+   python train_setfit.py
+   ```
+
+   This will fine-tune the `sentence-transformers/paraphrase-MiniLM-L6-v2` model on a small dataset and save it to the `setfit-model/` directory.
+
+5. Run the server:
    ```bash
    python main.py
    ```
    The API will be available at `http://localhost:8000`.
-   _Note: On the first run, the model (facebook/bart-large-mnli) will be downloaded (approximately 1.6GB)._
+   _Note: The base model is lightweight (~80MB), so download and startup are very fast._
 
 ### Frontend Setup
 
@@ -119,7 +127,7 @@ The backend uses a SetFit model that needs to be trained first.
 
 ## Evaluation & Performance
 
-I have implemented a rigorous evaluation script (`backend/evaluate.py`) to benchmark the model's performance.
+I have implemented an evaluation script (`backend/evaluate.py`) to benchmark the model's performance.
 
 ### Running the Evaluation
 
@@ -131,11 +139,41 @@ python backend/evaluate.py
 
 ### Current Results (SetFit)
 
-- **Accuracy**: >90% (Expected)
-- **Average Latency**: ~50ms per request (CPU)
+- **Accuracy**: 87%
+- **Weighted F1-Score**: 0.89
+- **Average Latency**: ~51ms per request (CPU)
 - **Key Improvements**:
   - Solved the confusion between **Entertainment** and **Law** (e.g., courtroom dramas).
   - Solved the confusion between **Politics** and **Technology** (e.g., AI regulation).
+
+## Software Engineering Practices
+
+### 1. Containerization (Docker)
+
+The project is fully containerized for easy deployment.
+
+**Prerequisites**: Docker and Docker Compose installed.
+
+**Run with Docker Compose**:
+
+```bash
+docker-compose up --build
+```
+
+- The backend will be available at `http://localhost:8000`.
+- The frontend will be available at `http://localhost:3000`.
+- _Note: The backend build process includes training the model, so the first build may take a few minutes._
+
+### 2. Automated Testing
+
+Unit tests are implemented using `pytest` to ensure API reliability.
+
+**Run Tests**:
+
+```bash
+cd backend
+pytest
+```
 
 ## Future Improvements
 

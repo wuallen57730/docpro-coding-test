@@ -1,0 +1,18 @@
+{
+  "labels": [
+    "business",
+    "education",
+    "entertainment",
+    "environment",
+    "finance",
+    "food",
+    "health",
+    "law",
+    "politics",
+    "science",
+    "sports",
+    "technology",
+    "travel"
+  ],
+  "normalize_embeddings": false
+}

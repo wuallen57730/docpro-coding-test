@@ -1,26 +1,11 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 import uvicorn
 import os
 from setfit import SetFitModel
 import numpy as np
-
-# Initialize the FastAPI app
-app = FastAPI(
-    title="AI Text Classifier API",
-    description="A simple API for text classification using SetFit (Few-Shot Learning).",
-    version="2.0.0"
-)
-
-# Configure CORS to allow requests from the React frontend
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific frontend URL
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 # Initialize the classification model
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "setfit-model")
@@ -47,6 +32,32 @@ def load_model():
         print(f"Error loading model: {e}")
         setfit_model = None
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Load the ML model
+    load_model()
+    yield
+    # Clean up the ML models and release the resources
+    global setfit_model
+    setfit_model = None
+
+# Initialize the FastAPI app
+app = FastAPI(
+    title="AI Text Classifier API",
+    description="A simple API for text classification using SetFit (Few-Shot Learning).",
+    version="2.0.0",
+    lifespan=lifespan
+)
+
+# Configure CORS to allow requests from the React frontend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, replace with specific frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 class TextRequest(BaseModel):
     text: str
     # candidate_labels is no longer needed for SetFit as labels are fixed in the model,
@@ -58,10 +69,6 @@ class ClassificationResponse(BaseModel):
     scores: list[float]
     top_label: str
     top_score: float
-
-@app.on_event("startup")
-def startup_event():
-    load_model()
 
 @app.get("/")
 def read_root():

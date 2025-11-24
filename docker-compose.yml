@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      # Exclude the model folder from volume to use the baked-in model
+      # or allow overwriting if you want to train locally.
+      # For production-like behavior, we rely on the image's model.
+    environment:
+      - PORT=8000
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend

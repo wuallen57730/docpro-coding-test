@@ -14,9 +14,7 @@ build/
 *.egg-info/
 
 # Model artifacts
-setfit-model/
 checkpoints/
-evaluation_results.csv
 
 # IDE
 .vscode/
