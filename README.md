@@ -197,6 +197,7 @@ While the SetFit approach offers high accuracy and speed, the current system has
 
 1.  **Data Augmentation**: Use LLMs to generate more diverse training examples for the SetFit model.
 2.  **Active Learning**: Implement a feedback loop where users can correct misclassifications to retrain the model.
+3.  **LLM Integration**: If budget permits, integrate LLM APIs (e.g., GPT-5) for even higher accuracy and reasoning capabilities, especially for complex or ambiguous texts.
 
 ---
 

@@ -98,7 +98,7 @@ def evaluate_model():
             "text": "The incumbent senator launched a fierce campaign focused on voter suppression issues and redistricting, rallying supporters at the town hall to demand electoral reform and greater transparency in campaign finance reporting before the upcoming midterm elections.",
             "true_label": "politics"
         },
-        # --- Category: Education (教育) ---
+        # --- Category: Education ---
         {
             "text": "The university administration announced a comprehensive overhaul of the undergraduate curriculum, shifting focus towards interdisciplinary studies and experiential learning to better equip students with critical thinking skills required for the modern workforce.",
             "true_label": "education"
@@ -108,7 +108,7 @@ def evaluate_model():
             "true_label": "education"
         },
 
-        # --- Category: Entertainment (娛樂) ---
+        # --- Category: Entertainment ---
         {
             "text": "Following a record-breaking opening weekend at the global box office, the sci-fi blockbuster received critical acclaim for its groundbreaking visual effects and compelling cinematography, securing nominations for three major Academy Awards including Best Picture.",
             "true_label": "entertainment"
@@ -118,21 +118,21 @@ def evaluate_model():
             "true_label": "entertainment"
         },
 
-        # --- Adversarial / Tricky Examples (對抗樣本) ---
+        # --- Adversarial / Tricky Examples ---
         
-        # 內容涉及「法律」詞彙，但實際上是關於「娛樂」 (電影劇情)
+        # Content involves "legal" vocabulary, but is actually about "Entertainment" (movie plot)
         {
             "text": "The courtroom drama series finale drew millions of viewers as the protagonist lawyer delivered a shocking closing argument that exposed the corruption within the fictional judicial system, earning the lead actor an Emmy award.",
             "true_label": "entertainment"
         },
         
-        # 內容涉及「金錢/預算」，但實際上是關於「教育」 (學校政策)
+        # Content involves "money/budget", but is actually about "Education" (school policy)
         {
             "text": "Despite the massive fiscal deficit, the college president refused to increase tuition fees, arguing that financial aid packages must be expanded to ensure that higher learning remains accessible to students from low-income families.",
             "true_label": "education"
         },
         
-        # 內容涉及「科技/AI」，但實際上是關於「政治」 (監管與政策)
+        # Content involves "Tech/AI", but is actually about "Politics" (regulation and policy)
         {
             "text": "Legislators are debating a controversial new framework to regulate artificial intelligence, aiming to pass laws that prevent algorithmic bias and protect user privacy without stifling innovation in the tech sector.",
             "true_label": "politics"
