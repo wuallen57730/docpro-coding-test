@@ -24,7 +24,6 @@ def load_model() -> None:
     try:
         print(f"Loading SetFit model from {MODEL_PATH}...")
         model = SetFitModel.from_pretrained(MODEL_PATH)
-        # SetFitModel.labels contains the list of labels used during training
         setfit_model = model
         label_list = list(model.labels)
         print(f"Model loaded successfully with labels: {label_list}")
@@ -34,14 +33,11 @@ def load_model() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Load the ML model
     load_model()
     yield
-    # Clean up the ML models and release the resources
     global setfit_model
     setfit_model = None
 
-# Initialize the FastAPI app
 app = FastAPI(
     title="AI Text Classifier API",
     description="A simple API for text classification using SetFit (Few-Shot Learning).",
@@ -49,10 +45,9 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Configure CORS to allow requests from the React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific frontend URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -60,8 +55,6 @@ app.add_middleware(
 
 class TextRequest(BaseModel):
     text: str
-    # candidate_labels is no longer needed for SetFit as labels are fixed in the model,
-    # but we keep it optional for backward compatibility if needed, though ignored.
     candidate_labels: list[str] = []
 
 class ClassificationResponse(BaseModel):
@@ -77,7 +70,6 @@ def read_root() -> dict[str, str]:
 @app.post("/classify", response_model=ClassificationResponse)
 def classify_text(request: TextRequest) -> ClassificationResponse:
     if setfit_model is None:
-        # Try loading again if it failed initially or wasn't ready
         load_model()
         if setfit_model is None:
              raise HTTPException(status_code=503, detail="Model not loaded. Please run backend/train_setfit.py to train the model first.")
@@ -86,16 +78,12 @@ def classify_text(request: TextRequest) -> ClassificationResponse:
         raise HTTPException(status_code=400, detail="Text cannot be empty")
 
     try:
-        # SetFit predict_proba returns probabilities for each class
-        # Input must be a list of strings
         probs = setfit_model.predict_proba([request.text])[0]
         
-        # Convert numpy array to list
         probs = probs.tolist() if not isinstance(probs, list) else probs
         scores = [float(p) for p in probs]
         labels = label_list
 
-        # Sort by score descending
         sorted_indices = np.argsort(scores)[::-1]
         sorted_labels = [labels[i] for i in sorted_indices]
         sorted_scores = [scores[i] for i in sorted_indices]

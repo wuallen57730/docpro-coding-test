@@ -30,7 +30,6 @@ def evaluate_model():
         logger.error(str(e))
         return
 
-    # 1. Define Test Dataset (Golden Set)
     # In a real scenario, this would be loaded from a CSV or database
     test_data = [
         {
@@ -81,7 +80,7 @@ def evaluate_model():
             "text": "Walking into The Saffron & Sage, you are immediately greeted by the warm, earthy aroma of roasted spices and freshly baked focaccia. The interior strikes a balance between rustic charm and modern minimalism, featuring exposed brick walls adorned with hanging copper pots. However, the acoustics were a bit problematic; as the evening progressed, the dining hall became incredibly noisy, making conversation somewhat difficult. Service was friendly but slightly scattered—our water glasses remained empty for long stretches despite the staff rushing past our table repeatedly.", 
             "true_label": "food"
         },
-        # Adversarial / Tricky examples (Expanded to reinforce the contrast)
+        # Adversarial / Tricky examples
         {
             "text": "Although he spent his days litigating corporate cases, the senior lawyer dedicated his evenings to analyzing his personal portfolio, heavily investing his savings into volatile tech stocks and diversifying his assets to hedge against market inflation.", 
             "true_label": "finance"
@@ -98,7 +97,6 @@ def evaluate_model():
             "text": "The incumbent senator launched a fierce campaign focused on voter suppression issues and redistricting, rallying supporters at the town hall to demand electoral reform and greater transparency in campaign finance reporting before the upcoming midterm elections.",
             "true_label": "politics"
         },
-        # --- Category: Education ---
         {
             "text": "The university administration announced a comprehensive overhaul of the undergraduate curriculum, shifting focus towards interdisciplinary studies and experiential learning to better equip students with critical thinking skills required for the modern workforce.",
             "true_label": "education"
@@ -107,8 +105,6 @@ def evaluate_model():
             "text": "Facing budget cuts, the local school board voted to consolidate resources by implementing a hybrid learning model, which allows students to access digital textbooks and attend virtual lectures while preserving funding for essential extracurricular activities.",
             "true_label": "education"
         },
-
-        # --- Category: Entertainment ---
         {
             "text": "Following a record-breaking opening weekend at the global box office, the sci-fi blockbuster received critical acclaim for its groundbreaking visual effects and compelling cinematography, securing nominations for three major Academy Awards including Best Picture.",
             "true_label": "entertainment"
@@ -117,8 +113,6 @@ def evaluate_model():
             "text": "The chart-topping pop icon surprised fans by dropping a surprise album at midnight, featuring collaborations with underground indie artists that blend electronic dance beats with soulful acoustic melodies, instantly trending on all major streaming platforms.",
             "true_label": "entertainment"
         },
-
-        # --- Adversarial / Tricky Examples ---
         
         # Content involves "legal" vocabulary, but is actually about "Entertainment" (movie plot)
         {
@@ -139,7 +133,6 @@ def evaluate_model():
         }
     ]
     
-    # Get labels from the model
     candidate_labels = list(classifier.labels)
     
     logger.info(f"Starting evaluation on {len(test_data)} samples...")
@@ -150,15 +143,10 @@ def evaluate_model():
     
     for i, item in enumerate(test_data):
         start_time = time.time()
-        # SetFit predict returns the label directly
-        # predict_proba returns probabilities
         
-        # We use predict for the top label
         predicted_label = classifier.predict([item["text"]])[0]
         
-        # For confidence, we can use predict_proba
         probs = classifier.predict_proba([item["text"]])[0]
-        # Find the index of the predicted label
         label_index = candidate_labels.index(predicted_label)
         confidence = probs[label_index]
         
@@ -170,7 +158,6 @@ def evaluate_model():
         
         logger.info(f"Sample {i+1}: True='{item['true_label']}', Pred='{predicted_label}' (Conf: {confidence:.2f})")
 
-    # 2. Calculate Metrics
     accuracy = accuracy_score(true_labels, predictions)
     avg_latency = np.mean(latencies)
     
@@ -180,16 +167,13 @@ def evaluate_model():
     logger.info(f"Accuracy: {accuracy:.4f}")
     logger.info(f"Average Latency: {avg_latency:.4f} seconds/sample")
     
-    # 3. Detailed Report
     report = classification_report(true_labels, predictions, labels=candidate_labels, zero_division=0)
     logger.info("\nClassification Report:\n" + report)
     
-    # 4. Confusion Matrix
     cm = confusion_matrix(true_labels, predictions, labels=candidate_labels)
     cm_df = pd.DataFrame(cm, index=candidate_labels, columns=candidate_labels)
     logger.info("\nConfusion Matrix:\n" + str(cm_df))
     
-    # 5. Save results to CSV for further analysis
     results_df = pd.DataFrame({
         "text": [item["text"] for item in test_data],
         "true_label": true_labels,
