@@ -105,13 +105,13 @@ I chose SetFit because it offers the **best trade-off** for this project: it fix
 ### 2. System Architecture
 
 ```mermaid
-flowchart LR
+graph LR
     A[User] -->|Interacts| B[React Frontend]
-    B -->|"HTTP POST /classify"| C[FastAPI Backend]
+    B -->|HTTP POST /classify| C[FastAPI Backend]
     C -->|Inference| D[SetFit Model]
     D -->|Predictions| C
-    C -->|"JSON Response"| B
-    B -->|"Display Results"| A
+    C -->|JSON Response| B
+    B -->|Display Results| A
 ```
 
 - **Backend (FastAPI)**: Serves the trained SetFit model.
@@ -184,6 +184,14 @@ Unit tests are implemented using `pytest` to ensure API reliability.
 cd backend
 pytest
 ```
+
+## Limitations
+
+While the SetFit approach offers high accuracy and speed, the current system has the following limitations:
+
+1.  **Fixed Label Set**: Unlike Zero-Shot models, this Few-Shot model is trained on a specific set of 13 topics. It cannot dynamically classify new topics (e.g., "Gardening") without retraining.
+2.  **Synthetic Training Data**: The model is currently trained on a small, manually curated dataset. Performance on highly technical or slang-heavy real-world text may vary.
+3.  **Language Support**: The underlying `paraphrase-MiniLM-L6-v2` model is optimized for English. Non-English inputs may yield unpredictable results.
 
 ## Future Improvements
 
