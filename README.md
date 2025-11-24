@@ -100,9 +100,19 @@ I selected a **Few-Shot Learning** approach using **SetFit** (Sentence Transform
 | **LLM Few-Shot (GPT-4)**        | Huge (API)        | Variable              | None (Prompting)     | Extremely versatile, high reasoning    | **High cost, latency, data privacy**   |
 | **Standard Fine-Tuning (BERT)** | Medium (~400MB)   | Fast                  | High (100+/class)    | Industry standard for large datasets   | **Performs poorly with few examples**  |
 
-I chose SetFit because it offers the **best trade-off** for this project: it fixes the accuracy issues of Zero-Shot (reaching >90%) while being significantly faster and cheaper to run than LLMs, all without needing a massive dataset.
+I chose SetFit because it offers the **best trade-off** for this project: it fixes the accuracy issues of Zero-Shot (reaching ~87%) while being significantly faster and cheaper to run than LLMs, all without needing a massive dataset.
 
 ### 2. System Architecture
+
+```mermaid
+flowchart LR
+    A[User] -->|Interacts| B[React Frontend]
+    B -->|"HTTP POST /classify"| C[FastAPI Backend]
+    C -->|Inference| D[SetFit Model]
+    D -->|Predictions| C
+    C -->|"JSON Response"| B
+    B -->|"Display Results"| A
+```
 
 - **Backend (FastAPI)**: Serves the trained SetFit model.
 - **Frontend (React)**: Displays classification results with confidence scores.
@@ -179,3 +189,7 @@ pytest
 
 1.  **Data Augmentation**: Use LLMs to generate more diverse training examples for the SetFit model.
 2.  **Active Learning**: Implement a feedback loop where users can correct misclassifications to retrain the model.
+
+---
+
+_The wording in this README.md has been polished by Gemini 3 Pro._

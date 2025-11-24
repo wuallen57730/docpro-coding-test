@@ -12,7 +12,7 @@ MODEL_PATH = os.path.join(os.path.dirname(__file__), "setfit-model")
 setfit_model = None
 label_list: list[str] = []
 
-def load_model():
+def load_model() -> None:
     global setfit_model, label_list
     if setfit_model is not None:
         return
@@ -71,11 +71,11 @@ class ClassificationResponse(BaseModel):
     top_score: float
 
 @app.get("/")
-def read_root():
+def read_root() -> dict[str, str]:
     return {"message": "Welcome to the AI Text Classifier API (SetFit Version)"}
 
 @app.post("/classify", response_model=ClassificationResponse)
-def classify_text(request: TextRequest):
+def classify_text(request: TextRequest) -> ClassificationResponse:
     if setfit_model is None:
         # Try loading again if it failed initially or wasn't ready
         load_model()
